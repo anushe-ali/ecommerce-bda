@@ -19,7 +19,7 @@ services:
       - zookeeperbda
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeperbda:21
+      KAFKA_ZOOKEEPER_CONNECT: zookeeperbda:2181
 
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
@@ -149,3 +149,4 @@ networks:
   bda_network:
     driver: bridge
     name: bda_network
+
