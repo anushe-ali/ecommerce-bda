@@ -6,7 +6,7 @@ print('start')
 
 #Kafka Configuration
 KAFKA_BROKER = 'localhost:9092'  # Update with your Kafka broker address
-KAFKA_TOPIC = 'bda_proj'  # Replace with your Kafka topic
+KAFKA_TOPIC = 'ecommerce_orders'  # Replace with your Kafka topic
 
 #Initialize Kafka Producer
 producer = Producer({'bootstrap.servers': KAFKA_BROKER})
