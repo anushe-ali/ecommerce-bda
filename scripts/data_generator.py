@@ -6,17 +6,17 @@ from datetime import datetime
 
 import numpy as np
 from faker import Faker
-from kafka import KafkaProducer
+from confluent_kafka import Producer
 
 KAFKA_BROKER = "kafka:9092"
 TOPIC_NAME = "ecommerce_orders"
 
 fake = Faker()
 
-producer = KafkaProducer(
-    bootstrap_servers='kafka:9092',
-    value_serializer=lambda v: json.dumps(v).encode("utf-8")
-)
+producer_config = {
+    "bootstrap.servers": KAFKA_BROKER
+}
+producer = Producer(producer_config)
 
 PRODUCTS = [
     {"product_id": "P1001", "category": "Electronics", "mean_price": 1200, "std": 300},
@@ -75,22 +75,26 @@ def generate_order():
 
     return order
 
+def delivery_report(err, msg):
+    if err is not None:
+        print(f"Delivery failed: {err}")
+
 def stream_orders():
     print("Ecommerce Data Generator Started...", flush=True)
 
     counter = 0
     while True:
-        # Orders per minute (realistic traffic)
-        orders_this_minute = np.random.poisson(30)
+        order = generate_order()
+        producer.produce(TOPIC_NAME, value=json.dumps(order), callback=delivery_report)
+        counter += 1
 
-        for _ in range(orders_this_minute):
-            event = generate_order()
-            producer.send(TOPIC_NAME, event)
-            counter += 1
+        # Flush every 100 orders
+        if counter % 100 == 0:
+            producer.flush()
+            print(f"Sent {counter} orders so far.", flush=True)
 
-        producer.flush()
-        print(f"Sent {orders_this_minute} orders this minute. Total sent: {counter}", flush=True)
-        time.sleep(60)
+        # tiny sleep to simulate realistic traffic
+        time.sleep(0.1)
 
 if __name__ == "__main__":
     stream_orders()

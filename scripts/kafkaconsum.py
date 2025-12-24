@@ -1,60 +1,76 @@
 import ast
-from confluent_kafka import Consumer, KafkaException
+import time
+from confluent_kafka import Consumer, KafkaException, KafkaError
 
-print("Consumer started")
+KAFKA_BROKER = 'kafka:9092'  # Use Kafka service name inside Docker network
+KAFKA_TOPIC = 'ecommerce_orders'
+GROUP_ID = 'ecommerce-consumer-group'
 
-# Kafka Configuration
-KAFKA_BROKER = 'kafka:9092'  # Update with your Kafka broker address
-KAFKA_TOPIC = 'ecommerce_orders'  # Replace with your Kafka topic
-GROUP_ID = 'ecommerce-consumer-group'  # Consumer group ID
+# Function to create Kafka consumer with retries
+def create_consumer(retries=5, delay=5):
+    for attempt in range(1, retries + 1):
+        try:
+            consumer = Consumer({
+                'bootstrap.servers': KAFKA_BROKER,
+                'group.id': GROUP_ID,
+                'auto.offset.reset': 'earliest',
+                'fetch.min.bytes': 1048576  # Fetch at least 1 MB of data
+            })
+            print("Kafka consumer connected successfully.")
+            return consumer
+        except KafkaException as e:
+            print(f"[Attempt {attempt}] Kafka not ready: {e}")
+            if attempt < retries:
+                print(f"Retrying in {delay} seconds...")
+                time.sleep(delay)
+            else:
+                raise e
 
-# Initialize Kafka Consumer
-consumer = Consumer({
-    'bootstrap.servers': KAFKA_BROKER,
-    'group.id': GROUP_ID,
-    'auto.offset.reset': 'earliest',
-    'fetch.min.bytes': 1048576  # Fetch at least 1 MB of data
-})
+# Create consumer
+consumer = create_consumer()
 
-# Subscribe to the Kafka topic
+# Subscribe to topic
 consumer.subscribe([KAFKA_TOPIC])
 
+print(f"Listening to Kafka topic: {KAFKA_TOPIC}")
+
+# Counter for logging
+counter = 0
+
 try:
-    print(f"Listening to topic: {KAFKA_TOPIC}")
     while True:
-        # Poll for messages with a timeout
         msg = consumer.poll(timeout=1.0)
 
-        if msg is None:  # No message
+        if msg is None:
             continue
-        if msg.error():  # Error occurred
-            if msg.error().code() == KafkaException._PARTITION_EOF:
-                continue  # End of partition
+
+        if msg.error():
+            # Ignore partition EOF
+            if msg.error().code() == KafkaError._PARTITION_EOF:
+                continue
             else:
-                print(f"Error: {msg.error()}")
+                print(f"Kafka error: {msg.error()}")
                 break
 
-        # Message received
         raw_message = msg.value().decode('utf-8')
-        print(f"Received message: {raw_message}")
 
-        # Parse the message safely
         try:
-            message = ast.literal_eval(raw_message)  # Convert to Python dictionary
-            print(f"Parsed message: {message}")
-            # Process the message (e.g., write to HDFS or HBase)
+            # Safely parse the message
+            message = ast.literal_eval(raw_message)
         except Exception as parse_error:
             print(f"Error parsing message: {parse_error}")
+            continue
+
+        counter += 1
+
+        # Log every 100 messages
+        if counter % 100 == 0:
+            print(f"[{counter} messages consumed] Latest message: {message}")
 
 except KeyboardInterrupt:
     print("Consumer stopped manually.")
 except Exception as e:
-    print(f"Error occurred: {e}")
+    print(f"Unexpected error: {e}")
 finally:
-    # Close the consumer
     consumer.close()
-    print("Consumer closed.")
-
-
-
-
+    print("Kafka consumer closed.")

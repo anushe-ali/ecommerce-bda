@@ -149,6 +149,19 @@ services:
     networks:
       - bda_network
 
+  kafka-consumer:
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile.consumer
+    container_name: kafka-consumer
+    depends_on:
+      - kafka
+      - zookeeperbda
+    command: python kafkaconsum.py
+    restart: always
+    networks:
+      - bda_network
+
 volumes:
   hadoop_namenode:
   hadoop_datanode:
