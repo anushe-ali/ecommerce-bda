@@ -14,7 +14,7 @@ TOPIC_NAME = "ecommerce_orders"
 fake = Faker()
 
 producer = KafkaProducer(
-    bootstrap_servers=KAFKA_BROKER,
+    bootstrap_servers='kafka:9092',
     value_serializer=lambda v: json.dumps(v).encode("utf-8")
 )
 
@@ -76,8 +76,9 @@ def generate_order():
     return order
 
 def stream_orders():
-    print("Ecommerce Data Generator Started...")
+    print("Ecommerce Data Generator Started...", flush=True)
 
+    counter = 0
     while True:
         # Orders per minute (realistic traffic)
         orders_this_minute = np.random.poisson(30)
@@ -85,8 +86,10 @@ def stream_orders():
         for _ in range(orders_this_minute):
             event = generate_order()
             producer.send(TOPIC_NAME, event)
+            counter += 1
 
         producer.flush()
+        print(f"Sent {orders_this_minute} orders this minute. Total sent: {counter}", flush=True)
         time.sleep(60)
 
 if __name__ == "__main__":
