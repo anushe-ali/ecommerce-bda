@@ -1,17 +1,6 @@
-# Base image
 FROM python:3.9-slim
-
-# Set working directory
 WORKDIR /app
-
-# Copy requirements
 COPY requirements.txt .
-
-# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy all scripts
-COPY kafkaconsum.py .
-
-# Set default command to run the consumer
-CMD ["python", "kafkaconsum.py"]
+COPY . .
+CMD ["./wait_for_mongo.sh", "mongo", "python", "kafkaconsum.py"]

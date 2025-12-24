@@ -1,3 +1,4 @@
 faker
 numpy
 confluent-kafka
+pymongo

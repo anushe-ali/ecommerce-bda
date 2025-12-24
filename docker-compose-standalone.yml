@@ -145,6 +145,7 @@ services:
     container_name: ecommerce-data-generator
     depends_on:
       - kafka
+      - mongo
     restart: always
     networks:
       - bda_network
@@ -157,8 +158,17 @@ services:
     depends_on:
       - kafka
       - zookeeperbda
+      - mongo
     command: python kafkaconsum.py
     restart: always
+    networks:
+      - bda_network
+
+  mongo:
+    image: mongo:4.4
+    container_name: mongo
+    ports:
+      - "27017:27017"
     networks:
       - bda_network
 
