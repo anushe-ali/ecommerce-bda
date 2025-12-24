@@ -122,6 +122,9 @@ services:
       - SPARK_MASTER_HOST=spark-master-bda
     networks:
       - bda_network
+    volumes:
+      - ./libs:/opt/spark/jars
+      - ./scripts:/app/scripts
 
   spark-worker-bda1:
     platform: linux/amd64
@@ -137,6 +140,9 @@ services:
       - SPARK_MASTER=spark://spark-master-bda:7077
     networks:
       - bda_network
+    volumes:
+      - ./libs:/opt/spark/jars
+      - ./scripts:/app/scripts
 
   data-generator:
     build:
