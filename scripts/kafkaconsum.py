@@ -5,7 +5,7 @@ print("Consumer started")
 
 # Kafka Configuration
 KAFKA_BROKER = 'localhost:9092'  # Update with your Kafka broker address
-KAFKA_TOPIC = 'bda_proj'  # Replace with your Kafka topic
+KAFKA_TOPIC = 'ecommerce_orders'  # Replace with your Kafka topic
 GROUP_ID = 'ecommerce-consumer-group'  # Consumer group ID
 
 # Initialize Kafka Consumer
@@ -54,3 +54,4 @@ finally:
     # Close the consumer
     consumer.close()
     print("Consumer closed.")
+
