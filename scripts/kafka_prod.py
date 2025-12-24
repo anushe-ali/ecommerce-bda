@@ -5,7 +5,7 @@ from confluent_kafka import Producer
 print('start')
 
 #Kafka Configuration
-KAFKA_BROKER = 'localhost:9092'  # Update with your Kafka broker address
+KAFKA_BROKER = 'kafka:9092'  # Update with your Kafka broker address
 KAFKA_TOPIC = 'ecommerce_orders'  # Replace with your Kafka topic
 
 #Initialize Kafka Producer
