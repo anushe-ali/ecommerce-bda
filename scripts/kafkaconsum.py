@@ -4,7 +4,7 @@ from confluent_kafka import Consumer, KafkaException
 print("Consumer started")
 
 # Kafka Configuration
-KAFKA_BROKER = 'kafka:9092'  # Update with your Kafka broker address
+KAFKA_BROKER = 'localhost:9092'  # Update with your Kafka broker address
 KAFKA_TOPIC = 'ecommerce_orders'  # Replace with your Kafka topic
 GROUP_ID = 'ecommerce-consumer-group'  # Consumer group ID
 
@@ -54,5 +54,6 @@ finally:
     # Close the consumer
     consumer.close()
     print("Consumer closed.")
+
 
 
