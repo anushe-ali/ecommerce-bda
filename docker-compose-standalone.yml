@@ -169,7 +169,7 @@ services:
   kafka-consumer:
     build:
       context: ./scripts
-      dockerfile: Dockerfile.consumer
+      dockerfile: Dockerfile.generator
     container_name: kafka-consumer
     depends_on:
       - kafka
