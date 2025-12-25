@@ -2,4 +2,6 @@ faker
 numpy
 confluent-kafka
 pymongo
-
+dash
+plotly
+pandas

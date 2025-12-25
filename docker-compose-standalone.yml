@@ -169,7 +169,7 @@ services:
   kafka-consumer:
     build:
       context: ./scripts
-      dockerfile: Dockerfile.consumer
+      dockerfile: Dockerfile.generator
     container_name: kafka-consumer
     depends_on:
       - kafka
@@ -186,6 +186,19 @@ services:
       - "27017:27017"
     networks:
       - bda_network
+
+  dashboard:
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile.dashboard
+    container_name: ecommerce-dashboard
+    depends_on:
+      - mongo
+    ports:
+      - "8050:8050"
+    networks:
+      - bda_network
+    restart: always
 
 volumes:
   hadoop_namenode:
