@@ -1,6 +1,7 @@
 import time
+import socket
 import json
-from datetime import datetime, UTC
+from datetime import datetime, timezone as UTC
 
 from pymongo import MongoClient
 from hdfs import InsecureClient
@@ -13,7 +14,7 @@ MONGO_URI = "mongodb://mongo:27017"
 DB_NAME = "ecommerce"
 COLLECTION_NAME = "orders_live"
 
-SIZE_THRESHOLD_MB = 1  # archive when size > 1 MB
+SIZE_THRESHOLD_MB = 300  # archive when size > 300 MB
 CHECK_INTERVAL_SEC = 10
 
 HDFS_NAMENODE_URL = "http://namenode:50070"
@@ -31,26 +32,40 @@ mongo_client = MongoClient(
 db = mongo_client[DB_NAME]
 orders_live = db[COLLECTION_NAME]
 
-hdfs_client = InsecureClient(
-    HDFS_NAMENODE_URL,
-    user=HDFS_USER
-)
+# ===============================
+# WAIT FOR HDFS
+# ===============================
+
+def wait_for_hdfs(host="namenode", port=50070, timeout=300):
+    """Wait until WebHDFS is reachable"""
+    print(f"Waiting for HDFS at {host}:{port} ...")
+    start = time.time()
+    while True:
+        try:
+            with socket.create_connection((host, port), timeout=5):
+                print("HDFS is ready!")
+                return
+        except OSError:
+            if time.time() - start > timeout:
+                raise TimeoutError(f"HDFS not reachable after {timeout}s")
+            print("HDFS not ready yet, retrying in 5s...")
+            time.sleep(5)
+
+wait_for_hdfs()
+
+# Now HDFS client can be safely created
+hdfs_client = InsecureClient(HDFS_NAMENODE_URL, user=HDFS_USER)
 
 # ===============================
 # HELPERS
 # ===============================
 
 def get_collection_size_mb(collection):
-    """Return MongoDB collection size in MB"""
     stats = db.command("collstats", collection.name)
     return stats["size"] / (1024 * 1024)
 
-
 def archive_orders_to_hdfs():
-    """Main archiving loop"""
-
     print("Archiver started. Monitoring MongoDB collection size...")
-
     while True:
         try:
             size_mb = get_collection_size_mb(orders_live)
@@ -89,7 +104,6 @@ def archive_orders_to_hdfs():
         except Exception as e:
             print(f"Failed to write to HDFS: {e}. Retrying in 30s...")
             time.sleep(30)
-
 
 # ===============================
 # ENTRY POINT
