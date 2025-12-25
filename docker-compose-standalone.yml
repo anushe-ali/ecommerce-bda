@@ -115,7 +115,7 @@ services:
     image: bde2020/spark-master:3.3.0-hadoop3.3
     container_name: spark-master-bda
     ports:
-      - "8082:8082"
+      - "8080:8080"
       - "7077:7077"
     environment:
       - SPARK_MODE=master
