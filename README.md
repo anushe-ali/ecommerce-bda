@@ -126,6 +126,7 @@ HDFS is optimized for large, immutable historical datasets and is ideal for long
 The architecture follows a layered big data design:
 <img width="468" height="624" alt="Screenshot 2025-12-26 at 9 44 48 PM" src="https://github.com/user-attachments/assets/a75ccbb3-9f10-47f2-beba-525cbce4ca16" />
 
+
 Ingestion Layer
 Real-time ecommerce events are generated and streamed into MongoDB.
 
