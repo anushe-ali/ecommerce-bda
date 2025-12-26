@@ -14,11 +14,11 @@ Ecommerce managers require minute-level visibility into sales performance, custo
 
 This project addresses the problem by enabling:
 
-Continuous data ingestion
+-Continuous data ingestion
 
-Near real-time analytics
+-Near real-time analytics
 
-Automatic data lifecycle management (hot vs archived data)
+-Automatic data lifecycle management (hot vs archived data)
 
 This makes the system suitable for real-time monitoring and decision support.
 
@@ -40,21 +40,8 @@ The schema is designed to support both real-time analytics from hot storage (Mon
 
 5. Data Dictionary
 
-Attribute	Description
+<img width="685" height="558" alt="Screenshot 2025-12-26 at 10 24 44 PM" src="https://github.com/user-attachments/assets/e2e534ea-03ad-400e-9a3f-a53c0e2cac14" />
 
-order_id	Unique identifier for each order
-customer_id	Reference to the customer
-product_id	Reference to the product
-category	Product category
-order_amount	Base price of the order
-discount	Discount applied to the order
-tax	Tax amount applied
-total_price	Final payable amount
-city	Customer’s city
-country	Customer’s country
-timestamp	Time when the order was placed
-payment_method	Method used for payment
-order_status	Current status of the order
 
 This data dictionary ensures clarity for all stakeholders, providing both developers and business users with a consistent understanding of each attribute. It also supports join-based queries for dashboard generation and KPI computation, enabling the system to provide actionable insights into real-time sales performance and customer behavior.
 
