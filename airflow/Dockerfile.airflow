@@ -1,0 +1,36 @@
+# Use official Airflow image for 2.10.5
+FROM apache/airflow:2.10.5
+
+# Switch to root to install system packages if needed
+USER root
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    vim \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Switch to airflow user (recommended for pip installs)
+USER airflow
+
+# Upgrade pip for airflow user
+RUN pip install --upgrade pip
+
+# Install necessary Airflow providers and Docker support
+RUN pip install \
+    apache-airflow-providers-apache-spark==4.11.0 \
+    docker \
+    "apache-airflow-providers-openlineage>=1.8.0"
+
+# Copy your DAGs into the container
+COPY airflow /opt/airflow/dags
+
+# Expose the webserver port
+EXPOSE 8080
+
+# Default command: init DB, create admin, start scheduler + webserver
+CMD ["bash", "-c", "\
+    airflow db init && \
+    airflow users create --username admin --password admin --firstname admin --lastname admin --role Admin --email admin@airflow.com && \
+    airflow scheduler & airflow webserver"]
