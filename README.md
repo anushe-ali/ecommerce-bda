@@ -122,6 +122,7 @@ Justification:
 HDFS is optimized for large, immutable historical datasets and is ideal for long-term analytics and compliance storage.
 
 7. Architecture Description (Textual)
+
 The architecture follows a layered big data design:
 
 
