@@ -39,7 +39,9 @@ To enable comprehensive analytical queries, the fact table is linked to multiple
 The schema is designed to support both real-time analytics from hot storage (MongoDB) and historical analytics from cold storage (HDFS). It ensures that BI dashboards can query data efficiently and produce visualizations such as revenue trends, top-selling products, failed payment analysis, and order volume dynamics.
 
 5. Data Dictionary
+
 Attribute	Description
+
 order_id	Unique identifier for each order
 customer_id	Reference to the customer
 product_id	Reference to the product
