@@ -357,17 +357,27 @@ airflow users create \
 
 ---
 
-### 4.6 Access the Airflow Web UI
+### 4.6 Run the scheduler
 
-Open your browser and navigate to:
+Create an admin user for accessing the Airflow web UI:
 
-```
-http://localhost:8089
+```bash
+airflow scheduler &
 ```
 
 ---
 
-### 4.7 Log In to Airflow
+### 4.7 Access the Airflow Web UI
+
+Open your browser and navigate to:
+
+```
+http://localhost:8085
+```
+
+---
+
+### 4.8 Log In to Airflow
 
 Log in using the following credentials:
 
