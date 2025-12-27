@@ -1,96 +1,381 @@
-Real-Time Ecommerce Big Data Analytics Pipeline
-1. Project Overview
+# Real-Time E-Commerce Big Data Analytics Pipeline
 
-This project implements a fully dockerized real-time Big Data Analytics (BDA) pipeline for an ecommerce domain. The system continuously generates realistic streaming data, ingests it into a NoSQL database, performs real-time and near–real-time analytics, and automatically archives historical data once a size threshold is reached.
+---
 
-The solution is designed to support live dashboards, high data velocity, and scalable analytics, following modern big data architectural principles.
+## 1. Project Overview
 
-2. Business Domain & Problem Justification
+This project implements a fully Dockerized **real-time Big Data Analytics (BDA) pipeline** for the e-commerce domain. The system continuously generates realistic streaming data, ingests it into a NoSQL database, performs real-time and near–real-time analytics, and automatically archives historical data once a size threshold is reached.
 
-Domain: Ecommerce (real-time order processing)
+The solution is designed to support **live dashboards**, **high data velocity**, and **scalable analytics**, following modern big data architectural principles.
 
-Business Problem:
-Ecommerce managers require minute-level visibility into sales performance, customer behavior, and product demand. Traditional batch systems introduce delays and cannot support operational decision-making.
+---
+
+## 2. Business Domain & Problem Justification
+
+**Domain:**
+E-commerce (real-time order processing)
+
+**Business Problem:**
+E-commerce managers require minute-level visibility into sales performance, customer behavior, and product demand. Traditional batch processing systems introduce delays and are unsuitable for operational decision-making.
 
 This project addresses the problem by enabling:
 
--Continuous data ingestion
+* Continuous data ingestion
+* Near real-time analytics
+* Automatic data lifecycle management (hot vs cold storage)
 
--Near real-time analytics
+This makes the system suitable for **real-time monitoring and decision support**.
 
--Automatic data lifecycle management (hot vs archived data)
+---
 
-This makes the system suitable for real-time monitoring and decision support.
+## 3. Real-Time Data Generation
 
-3. Real-Time Data Generation
+Streaming e-commerce data is generated continuously using a **statistical, AI-based data generator**, rather than simple random value generators. The generator mimics real-world online shopping behavior by modeling:
 
-In this project, streaming e-commerce data is generated continuously using a statistical, AI data generator, rather than simple random value generators. The generator is designed to mimic realistic behaviors observed in real-world online shopping environments. It produces skewed order distributions where some products or categories are more popular than others, time-dependent purchase patterns reflecting peak and off-peak shopping hours, and trends at the category level that replicate actual consumer preferences. Additionally, the generator incorporates correlations between customers and their locations, ensuring that regional buying patterns, city-level demand, and customer segmentation are preserved. By modeling these statistical relationships, the generator produces data that behaves like a true production system, providing a realistic foundation for analytical queries, KPI computation, and dashboard visualization.
+* Skewed order distributions where certain products or categories are more popular
+* Time-dependent purchase patterns (peak vs off-peak hours)
+* Category-level trends reflecting real consumer preferences
+* Correlations between customers and locations, preserving regional demand patterns
 
-4. Data Model & Schema Design
+By modeling these statistical relationships, the generator produces data that behaves like a real production system. This provides a realistic foundation for analytical queries, KPI computation, and dashboard visualization.
 
-The core dataset is centered around orders, represented as a fact table containing key numerical measures and associated dimensions.
+---
 
-Numerical KPIs (Facts):
-The fact table captures essential metrics for analytics, including order amount, quantity, discount, tax, and total price. These metrics form the foundation for operational and strategic decision-making, such as revenue calculations, average order value, and profitability analysis.
+## 4. Data Model & Schema Design
 
-Dimensions:
-To enable comprehensive analytical queries, the fact table is linked to multiple dimensions, including customer, product, category, city, country, payment method, order status, and timestamp. These dimensions allow the system to perform join-based queries using standard SQL operations like WHERE, GROUP BY, and HAVING. For example, one can analyze revenue trends by city, product category performance, or customer purchasing behavior over time.
+The core dataset is centered around **orders**, represented as a **fact table** with associated **dimensions**.
 
-The schema is designed to support both real-time analytics from hot storage (MongoDB) and historical analytics from cold storage (HDFS). It ensures that BI dashboards can query data efficiently and produce visualizations such as revenue trends, top-selling products, failed payment analysis, and order volume dynamics.
+### Numerical KPIs (Facts)
 
-5. Data Dictionary
+The fact table captures essential numerical metrics, including:
 
-<img width="685" height="558" alt="Screenshot 2025-12-26 at 10 24 44 PM" src="https://github.com/user-attachments/assets/e2e534ea-03ad-400e-9a3f-a53c0e2cac14" />
+* Order amount
+* Quantity
+* Discount
+* Tax
+* Total price
+
+These metrics support revenue analysis, average order value calculations, and profitability insights.
+
+### Dimensions
+
+The fact table is linked to multiple dimensions, including:
+
+* Customer
+* Product
+* Category
+* City
+* Country
+* Payment method
+* Order status
+* Timestamp
+
+This design enables join-based analytical queries using standard SQL operations such as `WHERE`, `GROUP BY`, and `HAVING`. Analysts can evaluate revenue by city, category performance, or customer purchasing behavior over time.
+
+The schema supports both:
+
+* **Real-time analytics** from hot storage (MongoDB)
+* **Historical analytics** from cold storage (HDFS)
+
+---
+
+## 5. Data Dictionary
+
+![Data Dictionary](https://github.com/user-attachments/assets/e2e534ea-03ad-400e-9a3f-a53c0e2cac14)
+
+The data dictionary ensures clarity for all stakeholders by providing a consistent understanding of each attribute. It supports join-based queries for dashboard generation and KPI computation, enabling actionable insights into real-time sales performance and customer behavior.
+
+---
+
+## 6. Data Volume and Archiving Strategy
+
+The system maintains **at least 300 MB of e-commerce data** at all times, supporting both real-time and historical analytics. Data is continuously generated using an AI-based streaming generator that produces realistic orders, payments, and cancellations.
+
+### Hot Storage: MongoDB
+
+MongoDB serves as the hot storage layer, storing the most recent streaming data. It supports:
+
+* Efficient reads and writes
+* Real-time aggregation
+* Minute-level KPI updates
+
+Key KPIs include total revenue, total orders, average order value, and city-level metrics.
+
+### Cold Storage: Hadoop HDFS
+
+When MongoDB exceeds the **300 MB threshold**, older records are automatically archived to Hadoop HDFS. Archived data is:
+
+* Stored in JSON format
+* Partitioned by timestamp
+* Accompanied by structured metadata (archive timestamp, record count, data range)
+
+This strategy prevents unbounded growth of MongoDB while enabling long-term analytics. Spark can process both fresh and archived data for trend analysis, KPI recomputation, and BI reporting.
+
+---
+
+## 7. Architecture Description
+
+The system follows a **layered big data architecture**:
+
+![Architecture Diagram](https://github.com/user-attachments/assets/e3582993-ebd1-4c23-a057-80207bcc8d0b)
+
+### a) Ingestion Layer
+
+* AI-based data generator produces realistic e-commerce events
+* Kafka ingests high-velocity streaming data
+* Zookeeper manages cluster coordination and metadata
+* Producer–consumer decoupling ensures scalability and reliability
+
+### b) Hot Storage Layer
+
+* MongoDB stores fact tables, dimension tables, and derived KPIs
+* Optimized for real-time dashboard queries
+* Schema separation enables efficient join-based analytics
+
+### c) Cold Storage Layer
+
+* Hadoop HDFS stores archived data beyond the MongoDB threshold
+* Data is partitioned by timestamp with structured metadata
+* Enables historical analytics without impacting hot storage performance
+
+### d) Processing & Analytics Layer
+
+* Spark Structured Streaming consumes Kafka topics
+* Performs ETL, cleaning, and transformation
+* Computes derived KPIs such as:
+
+  * Revenue by city
+  * Average order value
+  * Failed payments
+  * Cancelled orders
+* Micro-batch processing updates data every ~10 seconds
+
+### e) Analytics Serving Layer
+
+* Optional HBase integration for large-scale historical analytics
+* Stores aggregated metrics for fast random-access queries
+* Complements MongoDB without impacting real-time workloads
+
+### f) Visualization Layer
+
+* Dash + Plotly dashboards read from MongoDB
+* Live updates every minute
+* Visualizations include revenue trends, order counts, AOV, and failure analysis
+
+---
+
+## 8. Dashboard and Live Updates
+
+The system provides an interactive dashboard that reflects live e-commerce activity. Key performance indicators such as total revenue, total orders, average order value, and city-level metrics update every minute.
+
+By combining raw event data with Spark-computed KPIs, the dashboard enables near real-time operational monitoring and data-driven decision-making. Historical insights can optionally be retrieved from HDFS or HBase.
+
+---
+
+## 9. Key Outcomes
+
+* End-to-end real-time Big Data Analytics pipeline for e-commerce
+* Automated data lifecycle management across hot and cold storage
+* Scalable, modular, and fully containerized architecture using Docker
+* Near real-time KPI dashboards for operational decision-making
+* Analytics-ready schema optimized for OLAP-style queries
+* Historical analytics support for long-term trend analysis
+
+---
 
 
-This data dictionary ensures clarity for all stakeholders, providing both developers and business users with a consistent understanding of each attribute. It also supports join-based queries for dashboard generation and KPI computation, enabling the system to provide actionable insights into real-time sales performance and customer behavior.
+# Real-Time E-Commerce Setup
 
-6. Data Volume and Archiving Strategy
+Follow the steps below to run the real-time e-commerce dashboard with optional data archiving.
 
-In this project, the system is designed to maintain at least 300 MB of e-commerce data at all times, ensuring that both real-time and historical data are available for analytics. Data is continuously generated using an AI-based streaming generator, which produces realistic orders, payments, and cancellations. The generator follows statistical patterns observed in real-world e-commerce systems, including skewed order distributions, time-dependent purchase trends, and correlations between customers, products, and locations. This ensures that the streaming data is suitable for analytical queries and dashboard visualization.
+---
 
-To handle high-velocity data and ensure timely insights, MongoDB serves as the hot storage layer. Freshly generated streaming data is stored in MongoDB, allowing the system to perform real-time aggregation and update key performance indicators (KPIs) such as total revenue, total orders, average order value, and other metrics. MongoDB supports efficient reads and writes, which is critical for maintaining the minute-level live dashboard updates required by managers for operational decision-making.
+## Step 1: Build and Start Containers
 
-When the size of the MongoDB collection exceeds the 300 MB threshold, older records are automatically moved to Hadoop HDFS, which serves as the cold storage layer. HDFS is ideal for storing large, immutable datasets, providing durability, fault tolerance, and scalability. The archived data is stored in JSON format and partitioned by timestamp to enable efficient query processing over historical datasets. Alongside the archived data, metadata is stored in structured JSON, including information such as archive timestamp, the number of records archived, and the data range covered. This metadata allows the system to track the lifecycle of each dataset and facilitates efficient retrieval for batch analytics or OLAP queries.
+From the project root directory, build and start all required services:
 
-This archiving strategy ensures that the system can continuously ingest streaming data while preventing MongoDB from growing beyond manageable limits. By integrating HDFS for cold storage, the architecture provides a long-term analytics layer, allowing Spark to process both fresh and historical data for KPI computation, trend analysis, and BI dashboards. This approach balances real-time responsiveness with historical analytical capabilities, making the system suitable for operational monitoring, strategic decision-making, and compliance purposes.
+```bash
+docker compose build
+docker compose up -d
+```
 
-7. Architecture Description
+* The `-d` flag runs containers in detached mode.
+* This starts MongoDB, Kafka, Spark, Hadoop, and the dashboard service.
 
-The architecture follows a layered big data design:
+---
 
+## Step 2: Start Spark Streaming
 
-<img width="733" height="593" alt="Screenshot 2025-12-26 at 9 53 11 PM" src="https://github.com/user-attachments/assets/e3582993-ebd1-4c23-a057-80207bcc8d0b" />
+### 2.1 Enter the Spark Master Container
 
-a) Ingestion Layer
+```bash
+docker exec -it spark-master-bda bash
+```
 
-The ingestion layer captures all e-commerce events in real time. The AI-based data generator produces realistic order events with customer, product, quantity, payment, and cancellation information. These events are streamed into Kafka, a high-throughput distributed message broker, while Zookeeper manages cluster coordination and metadata. By decoupling producers from consumers, this layer can handle high-velocity data streams efficiently and provide a buffer for downstream processing.
+### 2.2 Copy Spark Streaming Script into the Container
 
-b) Hot Storage Layer
+From another terminal on the host machine:
 
-MongoDB serves as the hot storage layer, storing the processed streaming data including fact tables, dimension tables, and derived KPIs computed by Spark. This design allows the real-time dashboard to query the latest data efficiently. Separating facts and dimensions supports join-based queries for BI dashboards, such as revenue trends by city, product category performance, or customer-level insights.
+```bash
+docker cp scripts/spark_transform.py spark-master-bda:/spark_transform.py
+```
 
-c) Cold Storage Layer
+### 2.3 Submit the Spark Streaming Job
 
-Once MongoDB exceeds the defined size threshold (~300 MB), older records are archived to Hadoop HDFS in JSON format, partitioned by timestamp. Metadata is stored in structured JSON, capturing archive time, record count, and data range. This layer allows Spark to process historical data for trend analysis or batch analytics without impacting the performance of hot storage.
+Inside the Spark master container, run:
 
-d) Processing & Analytics Layer
+```bash
+/spark/bin/spark-submit \
+  --master spark://spark-master-bda:7077 \
+  --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0,org.mongodb.spark:mongo-spark-connector_2.12:3.0.2 \
+  /spark_transform.py
+```
 
-Apache Spark Structured Streaming consumes the Kafka topic with generated orders. It performs ETL, cleaning, and transforming the data into fact and dimension tables suitable for analytics. Dimension tables include customers, products, time, location, and payments, while the fact table contains detailed order-level records. Spark also computes derived KPIs like revenue by city, average order value, failed payments, and cancelled orders. These datasets are written to MongoDB for real-time analytics. Spark’s micro-batch processing ensures updates every 10 seconds, allowing dashboards to reflect near real-time metrics.
+This job:
 
-e) Analytics Serving Layer
+* Consumes real-time data from Kafka
+* Performs ETL and KPI computation using Spark Structured Streaming
+* Writes processed data and derived KPIs to MongoDB
 
-For large-scale historical analytics, HBase can be used as a column-oriented storage layer. Spark writes aggregated results to HBase to support fast, random-access queries over historical datasets. This layer is optional and complements MongoDB, enabling analytical queries on large historical datasets without impacting real-time performance.
+---
 
-f) Visualization Layer
+## Step 3: Access the Dashboard
 
-The dashboard reads KPIs and analytical data from MongoDB, providing live updates every minute. Visualizations include total revenue, total orders, average order value, revenue by city, average order value by city, failed payments, and cancelled orders. This layer combines near real-time metrics from hot storage with processed insights from Spark, giving operational visibility to managers.
+Open your browser and navigate to:
 
+```
+http://localhost:8050
+```
 
-8. Dashboard and Live Updates
+* The dashboard displays live KPIs and analytical charts.
+* Data refreshes automatically every minute.
 
-The system provides a fully interactive dashboard that continuously reflects live e-commerce activity. Key performance indicators, such as total revenue, total orders, average order value, and city-level metrics, are updated every minute from MongoDB. This allows managers to monitor operational trends and customer behavior in near real-time. By integrating Spark-computed KPIs, the dashboard combines raw event data with analytical insights for actionable decision-making. Historical analytics can optionally be retrieved from HDFS or HBase if integrated.
+---
 
-9. Key Outcomes
+## Step 4: Enable Data Archiving
 
-The project successfully implements an end-to-end real-time Big Data Analytics (BDA) pipeline for the e-commerce domain. The system includes automated data lifecycle management, moving data seamlessly between hot and cold storage while maintaining optimal performance. The architecture is scalable, modular, and fully containerized, allowing easy deployment and reproducibility using Docker. Analytical workflows are powered by Spark, which transforms streaming data into analytics-ready formats stored in MongoDB. The data schema and storage design are optimized for OLAP-style queries, supporting KPI computation, join-based analytics, and BI dashboard generation. Overall, the pipeline demonstrates a robust, real-time analytics capability suitable for operational monitoring, strategic decision-making, and long-term trend analysis.
+To archive older MongoDB data into HDFS when storage exceeds the threshold:
+
+### 4.1 Navigate to the Scripts Directory
+
+```bash
+cd scripts
+```
+
+### 4.2 Build the Archiver Docker Image
+
+```bash
+docker build -t ecommerce-bda-archiver -f Dockerfile.archiver .
+```
+
+### 4.3 Run the Archiver Container
+
+```bash
+docker run -it --rm \
+  --name ecommerce-archiver \
+  --network bda_network \
+  ecommerce-bda-archiver \
+  python3 archive_orders.py
+```
+
+* Older MongoDB records are moved to HDFS according to the archiving policy.
+* Metadata such as archive timestamp and record counts is preserved.
+* The `bda_network` allows communication between MongoDB and HDFS.
+
+---
+
+## Step 4: Airflow Setup and Configuration
+
+Follow these steps to build, start, and configure Apache Airflow for workflow orchestration.
+
+---
+
+### 4.1 Build the Airflow Service
+
+From the project root directory, build the Airflow image using the standalone Docker Compose file:
+
+```bash
+docker compose -f docker-compose-standalone.yml build airflow
+```
+
+---
+
+### 4.2 Start the Airflow Container
+
+Start the Airflow service in detached mode:
+
+```bash
+docker compose -f docker-compose-standalone.yml up -d airflow
+```
+
+This initializes:
+
+* Airflow webserver
+* Airflow scheduler
+* Metadata database
+
+---
+
+### 4.3 Access the Airflow Container
+
+Enter the running Airflow container:
+
+```bash
+docker exec -it airflow bash
+```
+
+---
+
+### 4.4 Install Required Python Dependencies
+
+Inside the Airflow container, install the required packages:
+
+```bash
+pip install pymongo hdfs kafka-python
+```
+
+These libraries enable:
+
+* MongoDB integration
+* HDFS interaction
+* Kafka-based ingestion and monitoring
+
+---
+
+### 4.5 Create an Airflow Admin User
+
+Create an admin user for accessing the Airflow web UI:
+
+```bash
+airflow users create \
+  --username admin \
+  --firstname Admin \
+  --lastname User \
+  --role Admin \
+  --email admin@airflow.com
+```
+
+---
+
+### 4.6 Access the Airflow Web UI
+
+Open your browser and navigate to:
+
+```
+http://localhost:8080
+```
+
+---
+
+### 4.7 Log In to Airflow
+
+Log in using the following credentials:
+
+* **Username:** `admin`
+* **Password:** (the password you set during user creation)
+
+Once logged in, you can:
+
+* Enable and trigger DAGs
+* Monitor task execution
+* Manage schedules and dependencies
